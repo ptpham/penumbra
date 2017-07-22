@@ -1,0 +1,17 @@
+{
+  "scripts": {
+    "prepublish": "browserify -t glslify deps.js -o static/bundle.js"
+  },
+  "dependencies": {
+    "browserify": "^14.4.0",
+    "gl-geometry": "^3.1.1",
+    "gl-matrix": "^2.3.2",
+    "gl-shader": "^4.2.1",
+    "glslify": "^6.1.0",
+    "icosphere": "^1.0.0",
+    "lodash": "^4.17.4",
+    "normals": "^1.1.0",
+    "parse-wavefront-obj": "^1.0.3",
+    "turntable-camera": "^1.0.0"
+  }
+}

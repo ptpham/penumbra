@@ -1,0 +1,77 @@
+
+<meta content-type="charset=utf-8" http-equiv="Content-Type"/>
+
+<html>
+<head>
+  <script src="bundle.js"></script>
+</head>
+
+<style>
+body {
+  margin: 0px;
+}
+canvas {
+  width: 100%;
+  height: 100%;
+}
+</style>
+
+<body>
+  <canvas id="canvas"></canvas>
+</body>
+
+<script>
+
+var gl = canvas.getContext('webgl');
+var shader = createShader(gl, Shaders.vs.simple, Shaders.fs.red);
+var projection = mat4.create(), view = mat4.create(), model = mat4.create();
+
+var camera = new TurntableCamera();
+camera.distance = 5;
+
+var pill, sphere;
+async function setup() {
+  pill = await loadGeometry(gl, 'mesh/pill.obj');
+  var ico = Icosphere(2);
+  sphere = {
+    geometry: createGeometry(gl)
+      .attr('position', ico.positions)
+      .attr('normal', computeNormals.vertexNormals(ico.cells, ico.positions))
+      .faces(ico.cells)
+  };
+
+  pill.occluder = Occluder.aabbToPill(Bound.aabb(pill.positions));
+}
+
+function render() {
+  canvas.width = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+  var { width, height } = canvas;
+  gl.viewport(0, 0, width, height);
+
+  gl.clearColor(0.8, 0.8, 0.8, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+  camera.view(view);
+  mat4.perspective(projection, Math.PI/4, width/height, 0.1, 50);
+
+  sphere.geometry.bind(shader);
+  shader.uniforms.view = view;
+  shader.uniforms.projection = projection;
+  shader.uniforms.model = model;
+  sphere.geometry.draw();
+}
+
+setup().then(render);
+
+window.addEventListener('mousemove', e => {
+  if (!e.shiftKey) return;
+  camera.rotation += e.movementX/100;
+  requestAnimationFrame(render);
+});
+window.addEventListener('resize', () => requestAnimationFrame(render));
+
+
+</script>
+
+</html>
