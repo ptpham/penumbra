@@ -10,7 +10,7 @@ Object.assign(window, {
   Icosphere: require('icosphere'),
   loadGeometry: require('./lib/loadGeometry'),
   Shaders: require('./lib/shaders'),
-  Occluder: require('./lib/occluder'),
+  PillOccluder: require('./lib/pillOccluder'),
   Bound: require('./lib/bound'),
 });
 

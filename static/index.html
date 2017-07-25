@@ -23,7 +23,8 @@ canvas {
 <script>
 
 var gl = canvas.getContext('webgl');
-var shader = createShader(gl, Shaders.vs.simple, Shaders.fs.red);
+var redShader = createShader(gl, Shaders.vs.simple, Shaders.fs.red);
+var po1Shader = createShader(gl, Shaders.vs.simple, Shaders.fs.po1);
 var projection = mat4.create(), view = mat4.create(), model = mat4.create();
 
 var camera = new TurntableCamera();
@@ -32,7 +33,7 @@ camera.distance = 5;
 var pill, sphere;
 async function setup() {
   pill = await loadGeometry(gl, 'mesh/pill.obj');
-  var ico = Icosphere(2);
+  var ico = Icosphere(3);
   sphere = {
     geometry: createGeometry(gl)
       .attr('position', ico.positions)
@@ -40,14 +41,36 @@ async function setup() {
       .faces(ico.cells)
   };
 
-  pill.occluder = Occluder.aabbToPill(Bound.aabb(pill.positions));
+  pill.occluder = PillOccluder.fromAABB(Bound.aabb(pill.positions));
 }
+
+function makeModelMatrix(translation, rotation, downward, scale) {
+  var result = mat4.create();
+  mat4.scale(result, result, vec3.fromValues(scale, scale, scale));
+  mat4.rotateX(result, result, downward);
+  mat4.rotateY(result, result, rotation);
+  mat4.translate(result, result, translation);
+  return result;
+}
+
+var pillOccluderSpace = new PillOccluder(vec3.create(), vec3.create(), 0);
+var pillInstances = [{
+  model: makeModelMatrix(vec3.fromValues(3,3,0), 0, 0, 0.3)
+},
+{
+  model: makeModelMatrix(vec3.fromValues(0,0,-8.0), 0, 0, 0.2)
+},
+{
+  model: makeModelMatrix(vec3.fromValues(5.3,-5.3,0), 0, 0, 0.2)
+}
+];
 
 function render() {
   canvas.width = canvas.offsetWidth;
   canvas.height = canvas.offsetHeight;
   var { width, height } = canvas;
   gl.viewport(0, 0, width, height);
+  gl.enable(gl.DEPTH_TEST);
 
   gl.clearColor(0.8, 0.8, 0.8, 1);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -55,17 +78,36 @@ function render() {
   camera.view(view);
   mat4.perspective(projection, Math.PI/4, width/height, 0.1, 50);
 
-  sphere.geometry.bind(shader);
-  shader.uniforms.view = view;
-  shader.uniforms.projection = projection;
-  shader.uniforms.model = model;
+  var instance = pillInstances[0];
+  pillOccluderSpace.copy(pill.occluder);
+  pillOccluderSpace.transformMat4(instance.model);
+  pill.geometry.draw();
+
+  sphere.geometry.bind(po1Shader);
+  po1Shader.uniforms.view = view;
+  po1Shader.uniforms.projection = projection;
+  po1Shader.uniforms.model = model;
+  po1Shader.uniforms.pill_radius = pillOccluderSpace.radius;
+  po1Shader.uniforms.pill_start = pillOccluderSpace.start;
+  po1Shader.uniforms.pill_end = pillOccluderSpace.end;
   sphere.geometry.draw();
+
+  pill.geometry.bind(redShader);
+  redShader.uniforms.view = view;
+  redShader.uniforms.projection = projection;
+  for (var instance of pillInstances) {
+    redShader.uniforms.model = instance.model;
+    pill.geometry.draw();
+  }
 }
 
 setup().then(render);
 
+var dragging = false;
+window.addEventListener('mousedown', e => dragging = true);
+window.addEventListener('mouseup', e => dragging = false);
 window.addEventListener('mousemove', e => {
-  if (!e.shiftKey) return;
+  if (!dragging) return;
   camera.rotation += e.movementX/100;
   requestAnimationFrame(render);
 });
