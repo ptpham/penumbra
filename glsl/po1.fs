@@ -3,31 +3,43 @@ precision mediump float;
 
 varying vec3 v_position, v_normal;
 
-uniform vec3 pill_end, pill_start;
-uniform float pill_radius;
+uniform vec3 start, end;
+uniform float radius;
 
 void main() {
-  vec3 pill_dir = pill_end - pill_start;
-  float pill_length = length(pill_dir);
-  pill_dir /= pill_length;
+  vec3 d0 = start - v_position;
+  vec3 d1 = end - v_position;
+  vec3 diff = end - start;
 
-  float closest_t = dot(v_position - pill_start, pill_dir);
-  closest_t = clamp(closest_t, 0.0, pill_length);
-  float min_remain = min(closest_t, pill_length - closest_t) + pill_radius;
-  
-  vec3 approach = closest_t*pill_dir + pill_start - v_position;
-  float approach_length = length(approach);
-  float approach_distance = max(approach_length - pill_radius, 0.0);
+  float l0 = length(d0);
+  float l1 = length(d1);
+  float ld = length(diff);
 
-  float hypo_length = sqrt(min_remain*min_remain + approach_length*approach_length);
-  float coverage = min_remain / hypo_length;
+  d0 /= l0;
+  d1 /= l1;
+  diff /= ld;
 
-  if (approach_length < 0.000001) approach_length = 1.0;
-  approach /= approach_length;
-  float approach_dot = max(dot(approach, v_normal), 0.0);
+  float t = clamp(dot(v_position - start, diff), 0.0, ld);
+  vec3 approach = t*diff + start - v_position;
+  float la = length(approach);
+  approach = approach / la;
 
-  float factor = coverage*approach_dot/(1.0 + approach_distance);
-  float value = 1.0 - factor*factor;
+  float theta0 = acos(clamp(dot(d0, approach), -1.0, 1.0));
+  float theta1 = acos(clamp(dot(d1, approach), -1.0, 1.0));
+
+  float radius2 = radius*radius;
+  float hyp0 = sqrt(radius2 + l0*l0);
+  float hyp1 = sqrt(radius2 + l1*l1);
+  float hypa = sqrt(radius2 + la*la);
+
+  float st0 = 1.0 - l0 / hyp0;
+  float st1 = 1.0 - l1 / hyp1;
+  float sta = 1.0 - la / hypa;
+
+  float ndot = max(dot(v_normal, approach), 0.0);
+
+  float factor = sta + 0.5*theta0*(sta + st0) + 0.5*theta1*(sta + st1);
+  float value = 1.0 - ndot*factor;
   gl_FragColor = vec4(value, value, value, 1.0);
 }
 

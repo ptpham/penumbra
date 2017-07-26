@@ -46,22 +46,22 @@ async function setup() {
 
 function makeModelMatrix(translation, rotation, downward, scale) {
   var result = mat4.create();
-  mat4.scale(result, result, vec3.fromValues(scale, scale, scale));
-  mat4.rotateX(result, result, downward);
-  mat4.rotateY(result, result, rotation);
   mat4.translate(result, result, translation);
+  mat4.rotateY(result, result, rotation);
+  mat4.rotateX(result, result, downward);
+  mat4.scale(result, result, vec3.fromValues(scale, scale, scale));
   return result;
 }
 
 var pillOccluderSpace = new PillOccluder(vec3.create(), vec3.create(), 0);
 var pillInstances = [{
-  model: makeModelMatrix(vec3.fromValues(3,3,0), 0, 0, 0.3)
+  model: makeModelMatrix(vec3.fromValues(1,0.85,0), 0, 0, 0.3)
 },
 {
-  model: makeModelMatrix(vec3.fromValues(0,0,-8.0), 0, 0, 0.2)
+  model: makeModelMatrix(vec3.fromValues(0,0,-1.8), 0, 0, 0.3)
 },
 {
-  model: makeModelMatrix(vec3.fromValues(5.3,-5.3,0), 0, 0, 0.2)
+  model: makeModelMatrix(vec3.fromValues(1,-1.2,0), 0, 0, 0.3)
 }
 ];
 
@@ -87,9 +87,9 @@ function render() {
   po1Shader.uniforms.view = view;
   po1Shader.uniforms.projection = projection;
   po1Shader.uniforms.model = model;
-  po1Shader.uniforms.pill_radius = pillOccluderSpace.radius;
-  po1Shader.uniforms.pill_start = pillOccluderSpace.start;
-  po1Shader.uniforms.pill_end = pillOccluderSpace.end;
+  po1Shader.uniforms.radius = pillOccluderSpace.radius;
+  po1Shader.uniforms.start = pillOccluderSpace.start;
+  po1Shader.uniforms.end = pillOccluderSpace.end;
   sphere.geometry.draw();
 
   pill.geometry.bind(redShader);
