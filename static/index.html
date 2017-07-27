@@ -55,13 +55,13 @@ function makeModelMatrix(translation, rotation, downward, scale) {
 
 var pillOccluderSpace = new PillOccluder(vec3.create(), vec3.create(), 0);
 var pillInstances = [{
-  model: makeModelMatrix(vec3.fromValues(1,0.85,0), 0, 0, 0.3)
+  model: makeModelMatrix(vec3.fromValues(1,0.82,0), 0, 0, 0.3)
 },
 {
-  model: makeModelMatrix(vec3.fromValues(0,0,-1.8), 0, 0, 0.3)
+  model: makeModelMatrix(vec3.fromValues(0,0,-1.75), 0, 0, 0.3)
 },
 {
-  model: makeModelMatrix(vec3.fromValues(1,-1.2,0), 0, 0, 0.3)
+  model: makeModelMatrix(vec3.fromValues(1.2,-1.1,0), 0, 0, 0.3)
 }
 ];
 
@@ -78,10 +78,9 @@ function render() {
   camera.view(view);
   mat4.perspective(projection, Math.PI/4, width/height, 0.1, 50);
 
-  var instance = pillInstances[0];
+  var instance = pillInstances[2];
   pillOccluderSpace.copy(pill.occluder);
   pillOccluderSpace.transformMat4(instance.model);
-  pill.geometry.draw();
 
   sphere.geometry.bind(po1Shader);
   po1Shader.uniforms.view = view;
