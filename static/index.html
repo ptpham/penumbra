@@ -24,7 +24,9 @@ canvas {
 
 var gl = canvas.getContext('webgl');
 var redShader = createShader(gl, Shaders.vs.simple, Shaders.fs.red);
+var so1Shader = createShader(gl, Shaders.vs.simple, Shaders.fs.so1);
 var po1Shader = createShader(gl, Shaders.vs.simple, Shaders.fs.po1);
+var po3Shader = createShader(gl, Shaders.vs.simple, Shaders.fs.po3);
 var projection = mat4.create(), view = mat4.create(), model = mat4.create();
 
 var camera = new TurntableCamera();
@@ -78,24 +80,30 @@ function render() {
   camera.view(view);
   mat4.perspective(projection, Math.PI/4, width/height, 0.1, 50);
 
-  var instance = pillInstances[2];
-  pillOccluderSpace.copy(pill.occluder);
-  pillOccluderSpace.transformMat4(instance.model);
+  sphere.geometry.bind(po3Shader);
+  po3Shader.uniforms.view = view;
+  po3Shader.uniforms.projection = projection;
+  po3Shader.uniforms.model = model;
 
-  sphere.geometry.bind(po1Shader);
-  po1Shader.uniforms.view = view;
-  po1Shader.uniforms.projection = projection;
-  po1Shader.uniforms.model = model;
-  po1Shader.uniforms.radius = pillOccluderSpace.radius;
-  po1Shader.uniforms.start = pillOccluderSpace.start;
-  po1Shader.uniforms.end = pillOccluderSpace.end;
+  for (var i = 0; i < 3; i++) {
+    var instance = pillInstances[i];
+    pillOccluderSpace.copy(pill.occluder);
+    pillOccluderSpace.transformMat4(instance.model);
+
+    po3Shader.uniforms['radius' + i] = pillOccluderSpace.radius;
+    po3Shader.uniforms['start' + i] = pillOccluderSpace.start;
+    po3Shader.uniforms['end' + i] = pillOccluderSpace.end;
+  }
+  po3Shader.uniforms.count = 3;
   sphere.geometry.draw();
 
-  pill.geometry.bind(redShader);
-  redShader.uniforms.view = view;
-  redShader.uniforms.projection = projection;
+  pill.geometry.bind(so1Shader);
+  so1Shader.uniforms.view = view;
+  so1Shader.uniforms.projection = projection;
+  so1Shader.uniforms.center = [0,0,0];
+  so1Shader.uniforms.radius = 1;
   for (var instance of pillInstances) {
-    redShader.uniforms.model = instance.model;
+    so1Shader.uniforms.model = instance.model;
     pill.geometry.draw();
   }
 }
