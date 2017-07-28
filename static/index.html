@@ -26,7 +26,7 @@ var gl = canvas.getContext('webgl');
 var redShader = createShader(gl, Shaders.vs.simple, Shaders.fs.red);
 var so1Shader = createShader(gl, Shaders.vs.simple, Shaders.fs.so1);
 var po1Shader = createShader(gl, Shaders.vs.simple, Shaders.fs.po1);
-var po3Shader = createShader(gl, Shaders.vs.simple, Shaders.fs.po3);
+var po4Shader = createShader(gl, Shaders.vs.simple, Shaders.fs.po4);
 var projection = mat4.create(), view = mat4.create(), model = mat4.create();
 
 var camera = new TurntableCamera();
@@ -64,6 +64,9 @@ var pillInstances = [{
 },
 {
   model: makeModelMatrix(vec3.fromValues(1.2,-1.1,0), 0, 0, 0.3)
+},
+{
+  model: makeModelMatrix(vec3.fromValues(0,0,1), 0, 0, 0.3)
 }
 ];
 
@@ -80,21 +83,21 @@ function render() {
   camera.view(view);
   mat4.perspective(projection, Math.PI/4, width/height, 0.1, 50);
 
-  sphere.geometry.bind(po3Shader);
-  po3Shader.uniforms.view = view;
-  po3Shader.uniforms.projection = projection;
-  po3Shader.uniforms.model = model;
+  sphere.geometry.bind(po4Shader);
+  po4Shader.uniforms.view = view;
+  po4Shader.uniforms.projection = projection;
+  po4Shader.uniforms.model = model;
 
-  for (var i = 0; i < 3; i++) {
+  for (var i = 0; i < 4; i++) {
     var instance = pillInstances[i];
     pillOccluderSpace.copy(pill.occluder);
     pillOccluderSpace.transformMat4(instance.model);
 
-    po3Shader.uniforms['radius' + i] = pillOccluderSpace.radius;
-    po3Shader.uniforms['start' + i] = pillOccluderSpace.start;
-    po3Shader.uniforms['end' + i] = pillOccluderSpace.end;
+    po4Shader.uniforms['radius' + i] = pillOccluderSpace.radius;
+    po4Shader.uniforms['start' + i] = pillOccluderSpace.start;
+    po4Shader.uniforms['end' + i] = pillOccluderSpace.end;
   }
-  po3Shader.uniforms.count = 3;
+  po4Shader.uniforms.count = 4;
   sphere.geometry.draw();
 
   pill.geometry.bind(so1Shader);

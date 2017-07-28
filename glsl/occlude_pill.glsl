@@ -1,4 +1,6 @@
 
+#pragma glslify: psahe = require('./psahe.glsl')
+
 float occlude_pill(vec3 start, vec3 end, float radius, vec3 position, vec3 normal) {
   vec3 d0 = start - position;
   vec3 d1 = end - position;
@@ -31,9 +33,9 @@ float occlude_pill(vec3 start, vec3 end, float radius, vec3 position, vec3 norma
   float ndot1 = dot(normal, d1);
   float ndota = dot(normal, approach);
 
-  float st0 = ndot0 * (1.0 - cos(gamma0));
-  float st1 = ndot1 * (1.0 - cos(gamma1));
-  float sta = ndota * (1.0 - cos(gammaa));
+  float st0 = psahe(ndot0, gamma0);
+  float st1 = psahe(ndot1, gamma1);
+  float sta = psahe(ndota, gammaa);
 
   return sta + 0.5*theta0*(sta + st0) + 0.5*theta1*(sta + st1);
 }
